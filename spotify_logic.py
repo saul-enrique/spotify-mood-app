@@ -7,39 +7,12 @@ from textblob import TextBlob
 from bs4 import BeautifulSoup
 import requests
 from tqdm import tqdm
-import time
 
-# Cargamos las variables de entorno una sola vez
 load_dotenv()
 
-# Inicializamos el cliente de Spotify una sola vez
-try:
-    auth_manager = SpotifyClientCredentials(
-        client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-        client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
-    )
-    sp = spotipy.Spotify(auth_manager=auth_manager)
-except Exception as e:
-    sp = None
-    print(f"Error al inicializar Spotify: {e}")
-
-def buscar_artistas(nombre_artista):
-    """
-    Busca artistas en Spotify y devuelve una lista de resultados.
-    """
-    if not sp:
-        return [] # Si Spotify no se inicializó, devuelve una lista vacía
-    
-    try:
-        resultados = sp.search(q='artist:' + nombre_artista, type='artist', limit=10)
-        # Devolvemos solo la lista de 'items' que es lo que nos interesa
-        return resultados['artists']['items']
-    except Exception as e:
-        print(f"Error al buscar artistas: {e}")
-        return []
-
-# --- Lógica de Análisis de Letras ---
-
+# Usamos una instancia separada de Spotipy solo para búsquedas públicas y rápidas
+auth_manager_logic = SpotifyClientCredentials(client_id=os.getenv("SPOTIPY_CLIENT_ID"), client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"))
+sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic, requests_timeout=20)
 genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
 
 def obtener_letra(url_cancion):
@@ -67,20 +40,18 @@ def analizar_discografia(artist_id, artist_name):
             todas_las_canciones = json.load(f)
     else:
         print(f"Analizando a {artist_name} por primera vez...")
-        # Aquí usamos el cliente 'sp' que está definido globalmente en este archivo
-        resultados_albums = sp.artist_albums(artist_id, album_type='album', limit=50)
+        resultados_albums = sp_logic.artist_albums(artist_id, album_type='album', limit=50)
         albums = resultados_albums['items']
         
         canciones_spotify = []
         for album in albums:
-            canciones_spotify.extend(sp.album_tracks(album['id'])['items'])
+            canciones_spotify.extend(sp_logic.album_tracks(album['id'])['items'])
 
         todas_las_canciones = []
         for cancion in tqdm(canciones_spotify, desc="Analizando canciones"):
             nombre_cancion = cancion['name']
             id_cancion = cancion['id']
 
-            # --- LÓGICA RESTAURADA ---
             letra = "Letra no encontrada."
             try:
                 api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
@@ -100,7 +71,6 @@ def analizar_discografia(artist_id, artist_name):
             if "Letra no encontrada" not in letra and "Error" not in letra:
                 analisis = TextBlob(letra)
                 polaridad = analisis.sentiment.polarity
-            # --- FIN DE LA LÓGICA RESTAURADA ---
             
             todas_las_canciones.append({
                 'nombre': nombre_cancion,
@@ -113,32 +83,4 @@ def analizar_discografia(artist_id, artist_name):
 
     canciones_positivas = [c for c in todas_las_canciones if c.get('polaridad', 0) > 0.1]
     
-    return todas_las_canciones, canciones_positivas
-
-def crear_playlist_spotify(user_id, artist_name, track_ids):
-    """
-    Crea una nueva playlist pública en la cuenta del usuario y añade las canciones.
-    """
-    if not sp or not user_id:
-        print("Error: El cliente de Spotify no está autenticado correctamente.")
-        return None
-    
-    try:
-        nombre_playlist = f"{artist_name} - Canciones Positivas"
-        descripcion_playlist = f"Una selección de las canciones más positivas de {artist_name}, generada por Mood Selector."
-        
-        # 1. Crear la playlist vacía
-        playlist = sp.user_playlist_create(user=user_id, name=nombre_playlist, public=True, description=descripcion_playlist)
-        playlist_id = playlist['id']
-        
-        # 2. Añadir las canciones en lotes de 100
-        for i in range(0, len(track_ids), 100):
-            lote = track_ids[i:i+100]
-            sp.playlist_add_items(playlist_id, lote)
-            
-        # Devolvemos el objeto completo de la playlist para poder usar su URL
-        return playlist
-    
-    except Exception as e:
-        print(f"Error al crear la playlist: {e}")
-        return None
+    return canciones_positivas

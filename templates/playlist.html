@@ -2,44 +2,39 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canciones Positivas de {{ artist_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <main>
-        <h1>Resultados del Análisis para {{ artist_name }}</h1>
-        
-        <!-- SECCIÓN DE DEPURACIÓN -->
-        <h2>Análisis Completo (Todas las canciones):</h2>
-        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
-            <ul>
-            {% for cancion in todas_las_canciones %}
-                <li>{{ cancion.nombre }} (Polaridad: {{ "%.2f"|format(cancion.polaridad) }})</li>
-            {% endfor %}
-            </ul>
+<body class="bg-dark text-white">
+    <main class="container mt-5">
+        <div class="text-center">
+            <h1 class="display-5">Canciones Positivas de {{ artist_name }}</h1>
         </div>
-        <!-- FIN DE SECCIÓN DE DEPURACIÓN -->
 
-        <hr>
-
-        <h2>Lista Filtrada (Canciones Positivas)</h2>
-        {% if canciones_filtradas %}
-            <ul>
-            {% for cancion in canciones_filtradas %}
-                <li>{{ cancion.nombre }} (Polaridad: {{ "%.2f"|format(cancion.polaridad) }})</li>
-            {% endfor %}
-            </ul>
+        {% if canciones %}
+            <div class="list-group mt-4">
+                {% for cancion in canciones %}
+                    <div class="list-group-item bg-secondary text-white d-flex justify-content-between align-items-center">
+                        {{ cancion.nombre }}
+                        <span class="badge bg-primary rounded-pill">Polaridad: {{ "%.2f"|format(cancion.polaridad) }}</span>
+                    </div>
+                {% endfor %}
+            </div>
             
-            <form action="/crear_playlist" method="post">
-                <input type="hidden" name="artist_id" value="{{ artist_id }}">
+            <form action="/crear_playlist" method="post" class="mt-4 d-grid">
                 <input type="hidden" name="artist_name" value="{{ artist_name }}">
-                <input type="hidden" name="track_ids" value="{{ canciones_filtradas|map(attribute='id')|join(',') }}">
-                <button type="submit">Crear Playlist en Spotify</button>
+                <input type="hidden" name="track_ids" value="{{ canciones|map(attribute='id')|join(',') }}">
+                <button type="submit" class="btn btn-primary btn-lg">Crear Playlist en Spotify</button>
             </form>
         {% else %}
-            <p>No se encontraron canciones suficientemente positivas (Polaridad > 0.1).</p>
+            <p class="alert alert-info mt-4">No se encontraron canciones suficientemente positivas en la discografía de este artista.</p>
         {% endif %}
         
-        <a href="/">Buscar otro artista</a>
+        <div class="text-center mt-4">
+             <a href="/" class="btn btn-outline-light">Buscar otro artista</a>
+        </div>
     </main>
 </body>
 </html>

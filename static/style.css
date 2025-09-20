@@ -1,0 +1,54 @@
+/* Definimos variables de color para usarlas fácilmente */
+:root {
+    --background-color: #191c29; /* Un azul muy oscuro */
+    --primary-color: #7b4cff;   /* El morado/violeta brillante */
+    --secondary-color: #2c314b; /* Un gris azulado para los inputs */
+    --text-color: #e0e0e0;       /* Un blanco no tan puro */
+    --text-muted: #8a92b1;    /* Un gris claro para texto secundario */
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Una fuente moderna */
+}
+
+/* Estilo para los contenedores principales */
+.container {
+    max-width: 600px; /* Hacemos la caja principal un poco más estrecha */
+}
+
+/* Personalizar los inputs */
+.form-control {
+    background-color: var(--secondary-color);
+    border: 1px solid var(--secondary-color);
+    color: var(--text-color);
+}
+
+.form-control:focus {
+    background-color: var(--secondary-color);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.25rem rgba(123, 76, 255, 0.25); /* Sombra de foco a juego */
+}
+
+/* Personalizar el botón principal */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background-color: #6a3de0; /* Un poco más oscuro al pasar el ratón */
+    border-color: #6a3de0;
+}
+
+/* Estilo para los títulos */
+h1, h2, h3 {
+    color: #ffffff;
+}
+
+p.lead {
+    color: var(--text-muted);
+}
