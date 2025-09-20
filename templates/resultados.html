@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de la Búsqueda</title>
+</head>
+<body>
+    <main>
+        <h1>Resultados para: "{{ busqueda }}"</h1>
+        
+        {% if artistas %}
+            <p>Selecciona el artista correcto:</p>
+            <ul>
+                {% for artista in artistas %}
+                    <li>
+                        <!-- Convertimos el nombre en un enlace -->
+                        <!-- La URL nos llevará a una nueva ruta '/artista/ID_DEL_ARTISTA' -->
+                        <a href="/artista/{{ artista.id }}/{{ artista.name }}">
+                            {{ artista.name }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No se encontraron artistas con ese nombre. Inténtalo de nuevo.</p>
+        {% endif %}
+
+        <a href="/">Volver a la búsqueda</a>
+    </main>
+</body>
+</html>

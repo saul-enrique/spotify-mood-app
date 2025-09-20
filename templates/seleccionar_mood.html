@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Mood para {{ artist_name }}</title>
+</head>
+<body>
+    <main>
+        <h1>{{ artist_name }}</h1>
+        <h2>¿Qué tipo de canciones buscas?</h2>
+        
+        <form action="/generar_playlist" method="post">
+            <!-- Campo oculto para enviar el ID del artista junto con el formulario -->
+            <input type="hidden" name="artist_id" value="{{ artist_id }}">
+            
+            <!-- Aquí podrías usar botones o un menú desplegable -->
+            <button type="submit" name="mood" value="1">Positivas</button>
+            <button type="submit" name="mood" value="2">Negativas</button>
+            
+            <!-- Añadiremos más moods en el futuro -->
+        </form>
+        
+        <a href="/">Empezar de nuevo</a>
+    </main>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Canciones Positivas de {{ artist_name }}</title>
+</head>
+<body>
+    <main>
+        <h1>Resultados del Análisis para {{ artist_name }}</h1>
+        
+        <!-- SECCIÓN DE DEPURACIÓN -->
+        <h2>Análisis Completo (Todas las canciones):</h2>
+        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
+            <ul>
+            {% for cancion in todas_las_canciones %}
+                <li>{{ cancion.nombre }} (Polaridad: {{ "%.2f"|format(cancion.polaridad) }})</li>
+            {% endfor %}
+            </ul>
+        </div>
+        <!-- FIN DE SECCIÓN DE DEPURACIÓN -->
+
+        <hr>
+
+        <h2>Lista Filtrada (Canciones Positivas)</h2>
+        {% if canciones_filtradas %}
+            <ul>
+            {% for cancion in canciones_filtradas %}
+                <li>{{ cancion.nombre }} (Polaridad: {{ "%.2f"|format(cancion.polaridad) }})</li>
+            {% endfor %}
+            </ul>
+            
+            <form action="/crear_playlist" method="post">
+                <input type="hidden" name="artist_id" value="{{ artist_id }}">
+                <input type="hidden" name="artist_name" value="{{ artist_name }}">
+                <input type="hidden" name="track_ids" value="{{ canciones_filtradas|map(attribute='id')|join(',') }}">
+                <button type="submit">Crear Playlist en Spotify</button>
+            </form>
+        {% else %}
+            <p>No se encontraron canciones suficientemente positivas (Polaridad > 0.1).</p>
+        {% endif %}
+        
+        <a href="/">Buscar otro artista</a>
+    </main>
+</body>
+</html>

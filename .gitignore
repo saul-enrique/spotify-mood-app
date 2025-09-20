@@ -10,3 +10,6 @@ __pycache__/
 
 # Archivos de caché de la aplicación
 cache/
+
+# Archivo de caché de autenticación de Spotipy
+.cache

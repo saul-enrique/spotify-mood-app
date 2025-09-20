@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood Selector</title>
+    <!-- Más adelante añadiremos aquí nuestro CSS -->
+</head>
+<body>
+    <main>
+        <h1>Mood Selector</h1>
+        <p>Encuentra la canción perfecta para cada momento.</p>
+        
+        <!-- ESTE ES EL NUEVO FORMULARIO -->
+        <form action="/buscar" method="post">
+            <label for="artist_name">Escribe el nombre de un artista:</label>
+            <input type="text" id="artist_name" name="artist_name" required>
+            <button type="submit">Buscar Artista</button>
+        </form>
+        
+        <!-- Aquí es donde mostraremos los resultados en el futuro -->
+        <div id="results">
+        </div>
+
+    </main>
+</body>
+</html>
