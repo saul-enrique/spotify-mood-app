@@ -7,3 +7,6 @@ venv/
 # Archivos de caché de Python
 __pycache__/
 *.pyc
+
+# Archivos de caché de la aplicación
+cache/
