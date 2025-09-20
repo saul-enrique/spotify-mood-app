@@ -16,7 +16,7 @@
         {% if artistas %}
             <p class="lead text-center mt-3">Selecciona el artista correcto:</p>
             <!-- Usamos una lista estilizada de Bootstrap -->
-            <div class="list-group mt-4">
+            <div class="list-group mt-4 glass-container">
                 {% for artista in artistas %}
                     <a href="/artista/{{ artista.id }}/{{ artista.name }}" class="list-group-item list-group-item-action bg-secondary text-white text-center">
                         {{ artista.name }}
