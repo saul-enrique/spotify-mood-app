@@ -58,7 +58,7 @@ def analizar_discografia(artist_id, artist_name):
             try:
                 api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
                 headers = {'Authorization': f'Bearer {genius_token}'}
-                respuesta_genius = requests.get(api_url, headers=headers).json()
+                respuesta_genius = requests.get(api_url, headers=headers, timeout=10).json()
                 url_cancion_genius = None
                 for hit in respuesta_genius['response']['hits']:
                     if hit['result']['primary_artist']['name'].lower() in artist_name.lower() or artist_name.lower() in hit['result']['primary_artist']['name'].lower():
