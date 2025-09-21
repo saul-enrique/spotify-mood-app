@@ -13,7 +13,7 @@ scope = "playlist-modify-public"
 auth_manager = SpotifyOAuth(
     client_id=os.getenv("SPOTIPY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"),
-    redirect_uri="http://127.0.0.1:5000/callback",
+    redirect_uri=os.getenv("SPOTIPY_REDIRECT_URI"),
     scope=scope,
     cache_path=".cache"
 )
