@@ -32,7 +32,9 @@ def obtener_letra(url_cancion):
 
 def analizar_discografia(artist_id, artist_name):
     os.makedirs('cache', exist_ok=True)
-    archivo_cache = f"cache/{artist_id}_letras_ids.json"
+    # Añadimos una versión al nombre del archivo. Si en el futuro cambiamos
+    # los datos que guardamos, solo tenemos que cambiar este nombre a "_v3".
+    archivo_cache = f"cache/{artist_id}_letras_ids_v2.json"
     
     if os.path.exists(archivo_cache):
         print("Cargando análisis desde caché...")
