@@ -7,17 +7,29 @@ from textblob import TextBlob
 from bs4 import BeautifulSoup
 import requests
 from tqdm import tqdm
+import time
 
 load_dotenv()
-
-# Usamos una instancia separada de Spotipy solo para búsquedas públicas y rápidas
 auth_manager_logic = SpotifyClientCredentials(client_id=os.getenv("SPOTIPY_CLIENT_ID"), client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"))
-sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic, requests_timeout=20)
+sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic)
 genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
+
+def peticion_con_reintentos(url, headers=None, timeout=10):
+    for intento in range(3):
+        try:
+            respuesta = requests.get(url, headers=headers, timeout=timeout)
+            respuesta.raise_for_status()
+            return respuesta
+        except requests.exceptions.RequestException as e:
+            print(f"Intento {intento + 1} para {url} fallido: {e}. Reintentando en 2s...")
+            time.sleep(2)
+    return None
 
 def obtener_letra(url_cancion):
     try:
-        pagina = requests.get(url_cancion)
+        pagina = peticion_con_reintentos(url_cancion)
+        if not pagina: return "Error de red al obtener la letra."
+        
         soup = BeautifulSoup(pagina.text, 'lxml')
         contenedor_letra = soup.find('div', class_=lambda c: c and c.startswith('Lyrics__Container'))
         if not contenedor_letra:
@@ -32,8 +44,6 @@ def obtener_letra(url_cancion):
 
 def analizar_discografia(artist_id, artist_name):
     os.makedirs('cache', exist_ok=True)
-    # Añadimos una versión al nombre del archivo. Si en el futuro cambiamos
-    # los datos que guardamos, solo tenemos que cambiar este nombre a "_v3".
     archivo_cache = f"cache/{artist_id}_letras_ids_v2.json"
     
     if os.path.exists(archivo_cache):
@@ -58,14 +68,19 @@ def analizar_discografia(artist_id, artist_name):
             try:
                 api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
                 headers = {'Authorization': f'Bearer {genius_token}'}
-                respuesta_genius = requests.get(api_url, headers=headers, timeout=10).json()
-                url_cancion_genius = None
-                for hit in respuesta_genius['response']['hits']:
-                    if hit['result']['primary_artist']['name'].lower() in artist_name.lower() or artist_name.lower() in hit['result']['primary_artist']['name'].lower():
-                        url_cancion_genius = hit['result']['url']
-                        break
-                if url_cancion_genius:
-                    letra = obtener_letra(url_cancion_genius)
+                
+                respuesta_genius_raw = peticion_con_reintentos(api_url, headers=headers)
+                if respuesta_genius_raw:
+                    respuesta_genius = respuesta_genius_raw.json()
+                    url_cancion_genius = None
+                    for hit in respuesta_genius['response']['hits']:
+                        if hit['result']['primary_artist']['name'].lower() in artist_name.lower() or artist_name.lower() in hit['result']['primary_artist']['name'].lower():
+                            url_cancion_genius = hit['result']['url']
+                            break
+                    if url_cancion_genius:
+                        letra = obtener_letra(url_cancion_genius)
+                else:
+                    letra = "Error de red en la API de Genius."
             except Exception:
                 letra = "Error buscando en Genius."
 
