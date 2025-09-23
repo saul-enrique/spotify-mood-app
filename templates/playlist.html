@@ -18,7 +18,7 @@
                 {% for cancion in canciones %}
                     <div class="list-group-item bg-secondary text-white d-flex justify-content-between align-items-center">
                         {{ cancion.nombre }}
-                        <span class="badge bg-primary rounded-pill">Polaridad: {{ "%.2f"|format(cancion.polaridad) }}</span>
+                        <span class="badge bg-primary rounded-pill">Valencia: {{ "%.2f"|format(cancion.valence) }}</span>
                     </div>
                 {% endfor %}
             </div>
