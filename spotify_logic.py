@@ -3,25 +3,32 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from dotenv import load_dotenv
 import json
+from textblob import TextBlob
+import requests
 from tqdm import tqdm
 
 load_dotenv()
 
-# Usamos una instancia separada de Spotipy para búsquedas públicas y rápidas
-auth_manager_logic = SpotifyClientCredentials(client_id=os.getenv("SPOTIPY_CLIENT_ID"), client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"))
-sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic, requests_timeout=15)
+# Esta instancia de Spotipy solo se usa para búsquedas públicas y rápidas
+# No necesita permisos de usuario
+auth_manager_logic = SpotifyClientCredentials(
+    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
+)
+sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic)
+genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
 
 def analizar_discografia(artist_id, artist_name):
     os.makedirs('cache', exist_ok=True)
-    # Nueva versión de caché para los audio features
-    archivo_cache = f"cache/{artist_id}_audio_features.json"
+    # Versión final del caché, solo con API
+    archivo_cache = f"cache/{artist_id}_api_only_v1.json"
     
     if os.path.exists(archivo_cache):
-        print("Cargando análisis de audio features desde caché...")
+        print("Cargando análisis desde caché...")
         with open(archivo_cache, 'r') as f:
             todas_las_canciones = json.load(f)
     else:
-        print(f"Analizando a {artist_name} por primera vez (Audio Features)...")
+        print(f"Analizando a {artist_name} por primera vez (modo solo API)...")
         resultados_albums = sp_logic.artist_albums(artist_id, album_type='album', limit=50)
         albums = resultados_albums['items']
         
@@ -29,35 +36,35 @@ def analizar_discografia(artist_id, artist_name):
         for album in albums:
             canciones_spotify.extend(sp_logic.album_tracks(album['id'])['items'])
 
-        # Filtramos IDs nulos o inválidos antes de la petición
-        ids_canciones = [c['id'] for c in canciones_spotify if c and c.get('id')]
-        
         todas_las_canciones = []
-        
-        # Obtenemos los audio features en lotes de 100
-        for i in tqdm(range(0, len(ids_canciones), 100), desc="Obteniendo Audio Features"):
-            lote_ids = ids_canciones[i:i+100]
+        for cancion in tqdm(canciones_spotify, desc="Analizando canciones (API)"):
+            nombre_cancion = cancion['name']
+            id_cancion = cancion['id']
+            texto_para_analizar = nombre_cancion
+            
             try:
-                resultados_lote = sp_logic.audio_features(lote_ids)
+                api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
+                headers = {'Authorization': f'Bearer {genius_token}'}
+                respuesta_genius = requests.get(api_url, headers=headers, timeout=15).json()
                 
-                # Unimos los features con los nombres de las canciones
-                # Esto requiere encontrar la canción original por su ID
-                for features in resultados_lote:
-                    if features:
-                        cancion_original = next((c for c in canciones_spotify if c['id'] == features['id']), None)
-                        if cancion_original:
-                            todas_las_canciones.append({
-                                'nombre': cancion_original['name'],
-                                'id': features['id'],
-                                'valence': features['valence'] # La "positividad" musical
-                            })
+                for hit in respuesta_genius['response']['hits']:
+                    if hit['result']['primary_artist']['name'].lower() in artist_name.lower():
+                        texto_para_analizar = hit['result']['full_title']
+                        break
             except Exception as e:
-                print(f"Error obteniendo lote de audio features: {e}")
+                print(f"Error en API de Genius para '{nombre_cancion}': {e}")
 
+            polaridad = TextBlob(texto_para_analizar).sentiment.polarity
+            
+            todas_las_canciones.append({
+                'nombre': nombre_cancion,
+                'id': id_cancion,
+                'polaridad': polaridad
+            })
+        
         with open(archivo_cache, 'w') as f:
             json.dump(todas_las_canciones, f, indent=4)
 
-    # Filtramos por canciones con alta "valence" (positividad musical)
-    canciones_positivas = [c for c in todas_las_canciones if c.get('valence', 0) > 0.6]
+    canciones_positivas = [c for c in todas_las_canciones if c.get('polaridad', 0) > 0.1]
     
-    return sorted(canciones_positivas, key=lambda x: x['valence'], reverse=True)
+    return sorted(canciones_positivas, key=lambda x: x['polaridad'], reverse=True)
