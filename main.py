@@ -3,7 +3,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import os
 from dotenv import load_dotenv
-from spotify_logic import analizar_discografia
+from spotify_logic import analizar_discografia, buscar_artistas_en_spotify
 
 load_dotenv()
 app = Flask(__name__)
@@ -17,16 +17,13 @@ auth_manager = SpotifyOAuth(
     scope=scope,
     cache_handler=spotipy.cache_handler.FlaskSessionCacheHandler(session)
 )
-sp_public = spotipy.Spotify(auth_manager=spotipy.oauth2.SpotifyClientCredentials(
-    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
-))
 
  @app.route('/')
 def index():
+    # La página de inicio ahora maneja la autorización
     if not auth_manager.get_cached_token():
         auth_url = auth_manager.get_authorize_url()
-        return redirect(auth_url)
+        return render_template('login.html', auth_url=auth_url)
     return render_template('index.html')
 
  @app.route('/callback')
@@ -37,41 +34,27 @@ def callback():
  @app.route('/buscar', methods=['POST'])
 def buscar():
     nombre_artista = request.form['artist_name']
-    return redirect(f"/artista/{nombre_artista}")
+    lista_artistas = buscar_artistas_en_spotify(nombre_artista)
+    return render_template('resultados.html', artistas=lista_artistas, busqueda=nombre_artista)
 
- @app.route('/artista/<artist_name>')
-def mostrar_resultados(artist_name):
-    resultados = sp_public.search(q='artist:' + artist_name, type='artist', limit=10)['artists']['items']
-    if not resultados:
-        return f"<h1>No se encontró al artista '{artist_name}'</h1><a href='/'>Volver</a>"
-    
-    artista_elegido = resultados[0]
-    artist_id = artista_elegido['id']
-    nombre_real_artista = artista_elegido['name']
-
-    canciones_positivas = analizar_discografia(artist_id, nombre_real_artista)
-    
+ @app.route('/artista/<artist_id>/<artist_name>')
+def mostrar_positivas(artist_id, artist_name):
+    canciones_positivas = analizar_discografia(artist_id, artist_name)
     session['track_ids_para_playlist'] = [c['id'] for c in canciones_positivas if c.get('id')]
-    session['artist_name_para_playlist'] = nombre_real_artista
-    
+    session['artist_name_para_playlist'] = artist_name
     return render_template('playlist.html', 
                             canciones=canciones_positivas, 
-                            artist_name=nombre_real_artista)
+                            artist_name=artist_name)
 
- @app.route('/crear_playlist_login')
-def crear_playlist_login():
-    auth_url = auth_manager.get_authorize_url()
-    return redirect(auth_url)
-
- @app.route('/crear_playlist_final')
-def crear_playlist_final():
+ @app.route('/crear_playlist')
+def crear_playlist_route():
     sp_user = spotipy.Spotify(auth_manager=auth_manager)
     
     track_ids = session.get('track_ids_para_playlist', [])
     artist_name = session.get('artist_name_para_playlist', 'Artista Desconocido')
     
     if not track_ids:
-        return "Error: No se encontraron canciones en la sesión."
+        return "Error: No se encontraron canciones en la sesión para crear la playlist."
 
     user_id = sp_user.current_user()['id']
     nombre_playlist = f"{artist_name} - Canciones Positivas"
@@ -84,7 +67,9 @@ def crear_playlist_final():
             sp_user.playlist_add_items(playlist['id'], lote)
     
     playlist_url = playlist["external_urls"]["spotify"]
-    return f'<h1>¡Playlist creada!</h1><p><a href="{playlist_url}" target="_blank">Ver en Spotify</a></p><a href="/">Crear otra</a>'
+    return render_template('exito.html', playlist_url=playlist_url, nombre_playlist=nombre_playlist)
 
 if __name__ == '__main__':
+    # Usamos el puerto 8888 para que coincida con la redirect_uri local
+    os.environ['SPOTIPY_REDIRECT_URI'] = 'http://127.0.0.1:8888/callback'
     app.run(debug=True, port=8888)

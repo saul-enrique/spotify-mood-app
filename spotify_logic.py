@@ -6,12 +6,20 @@ import json
 from textblob import TextBlob
 import requests
 from tqdm import tqdm
+import time
 
 load_dotenv()
 
-auth_manager_logic = SpotifyClientCredentials(client_id=os.getenv("SPOTIPY_CLIENT_ID"), client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"))
+# Instancia de Spotipy para búsquedas públicas que no requieren login de usuario
+auth_manager_logic = SpotifyClientCredentials(
+    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
+    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
+)
 sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic)
 genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
+
+def buscar_artistas_en_spotify(nombre_artista):
+    return sp_logic.search(q='artist:' + nombre_artista, type='artist', limit=10)['artists']['items']
 
 def analizar_discografia(artist_id, artist_name):
     os.makedirs('cache', exist_ok=True)
@@ -37,7 +45,7 @@ def analizar_discografia(artist_id, artist_name):
             texto_para_analizar = nombre_cancion
             
             try:
-                api_url = f"https.api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
+                api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
                 headers = {'Authorization': f'Bearer {genius_token}'}
                 respuesta_genius = requests.get(api_url, headers=headers, timeout=15).json()
                 
