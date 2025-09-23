@@ -9,18 +9,12 @@ from tqdm import tqdm
 
 load_dotenv()
 
-# Esta instancia de Spotipy solo se usa para búsquedas públicas y rápidas
-# No necesita permisos de usuario
-auth_manager_logic = SpotifyClientCredentials(
-    client_id=os.getenv("SPOTIPY_CLIENT_ID"),
-    client_secret=os.getenv("SPOTIPY_CLIENT_SECRET")
-)
+auth_manager_logic = SpotifyClientCredentials(client_id=os.getenv("SPOTIPY_CLIENT_ID"), client_secret=os.getenv("SPOTIPY_CLIENT_SECRET"))
 sp_logic = spotipy.Spotify(auth_manager=auth_manager_logic)
 genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
 
 def analizar_discografia(artist_id, artist_name):
     os.makedirs('cache', exist_ok=True)
-    # Versión final del caché, solo con API
     archivo_cache = f"cache/{artist_id}_api_only_v1.json"
     
     if os.path.exists(archivo_cache):
@@ -43,7 +37,7 @@ def analizar_discografia(artist_id, artist_name):
             texto_para_analizar = nombre_cancion
             
             try:
-                api_url = f"https://api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
+                api_url = f"https.api.genius.com/search?q={requests.utils.quote(nombre_cancion + ' ' + artist_name)}"
                 headers = {'Authorization': f'Bearer {genius_token}'}
                 respuesta_genius = requests.get(api_url, headers=headers, timeout=15).json()
                 
