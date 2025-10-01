@@ -1,48 +1,41 @@
-# Positive Finder ✨
+# El Álbum Esencial 🎵
 
-**Aplicación en vivo:** [https://saulbracamonte.pythonanywhere.com/](http://saulbracamonte.pythonanywhere.com/)
+**Aplicación en vivo:** [http://saulbracamonte.pythonanywhere.com/](http://saulbracamonte.pythonanywhere.com/)
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
 ![Spotify API](https://img.shields.io/badge/Spotify-1ED760?style=for-the-badge&logo=spotify&logoColor=white)
-![Genius API](https://img.shields.io/badge/Genius-yellow?style=for-the-badge&logo=genius&logoColor=black)
 
-Positive Finder es una aplicación web full-stack que descubre el lado más positivo de tus artistas favoritos. La aplicación analiza la discografía completa de cualquier artista y genera una lista de sus canciones más alegres, permitiendo al usuario crear una playlist con ellas directamente en su cuenta de Spotify.
+"El Álbum Esencial" es una aplicación web full-stack que resuelve una pregunta para cualquier fan de la música: ¿Por dónde empiezo con un artista nuevo? La aplicación busca un artista en Spotify, identifica su álbum de estudio más representativo (basado en la API de Spotify) y permite al usuario crear una playlist con ese álbum completo en su propia cuenta con un solo clic.
 
 ---
 
-## El Viaje del Desarrollo: Un Caso de Estudio Real
+## El Viaje del Desarrollo: Un Pivote Estratégico
 
-Este proyecto fue más que un ejercicio de programación; fue una simulación completa de los desafíos del desarrollo en el mundo real.
+Este proyecto es un caso de estudio sobre la adaptación y la resolución de problemas en el desarrollo web del mundo real.
 
-La idea inicial era simple: analizar el sentimiento de las letras de todas las canciones de un artista. El desarrollo local fue un éxito, logrando una aplicación funcional que cumplía con todos los requisitos. Sin embargo, el verdadero desafío comenzó durante el despliegue en plataformas gratuitas como Render y PythonAnywhere.
+La idea original, "Positive Finder", buscaba analizar el sentimiento de **toda** la discografía de un artista. Aunque la aplicación era **100% funcional en mi entorno local**, durante el despliegue en plataformas gratuitas (Render, PythonAnywhere) me enfrenté a dos muros técnicos infranqueables:
 
-1.  **El Muro del Rendimiento:** El análisis inicial, que requería cientos de peticiones de web scraping a Genius.com para obtener las letras completas, era demasiado lento. Esto provocaba **timeouts** en los servidores de producción (Gunicorn), que están diseñados para peticiones rápidas, no para procesos de análisis de datos de varios minutos.
+1.  **Timeouts de Servidor:** El análisis de cientos de canciones era un proceso demasiado largo para el límite de 30 segundos de los servidores web gratuitos, causando que la aplicación fallara.
+2.  **Bloqueo de APIs:** Los servicios de scraping de letras como Genius.com identificaban las peticiones desde los servidores de la nube como bots y las bloqueaban, haciendo imposible obtener los datos necesarios de forma fiable.
 
-2.  **El Bloqueo de APIs:** Las peticiones de web scraping que funcionaban desde mi máquina local eran bloqueadas activamente por Genius cuando se originaban desde los centros de datos de los servicios de despliegue. Este es un mecanismo anti-bot común contra el que tuve que ingeniar una solución.
+En lugar de abandonar el proyecto, tomé una **decisión de ingeniería y de producto**: pivoté hacia una idea que mantuviera el espíritu del proyecto original pero que fuera **técnicamente robusta, eficiente y desplegable.**
 
-3.  **El Pivote Estratégico:** Enfrentado a estas limitaciones, tomé una decisión de ingeniería clave: sacrifiqué la profundidad del análisis (letras completas) por la **fiabilidad, velocidad y éxito del despliegue**. Refactoricé toda la lógica de análisis para dejar de depender del web scraping y utilizar únicamente la API de Genius. Esta nueva versión analiza el sentimiento basándose en los títulos completos de las canciones, un proceso **10 veces más rápido** y que no es bloqueado por las APIs.
-
-El resultado es una aplicación robusta, rápida y desplegada con éxito, que demuestra mi capacidad para adaptarme a las restricciones técnicas y tomar decisiones de producto para entregar un proyecto funcional.
+Así nació **"El Álbum Esencial"**. Esta nueva versión se enfoca en entregar un resultado de alto valor ("el mejor álbum para empezar") de forma casi instantánea, garantizando una experiencia de usuario perfecta y demostrando mi capacidad para adaptar una solución a las limitaciones del entorno de producción.
 
 ## Características Principales
 
 *   **Búsqueda de Artistas en Tiempo Real:** Se conecta a la API de Spotify para encontrar cualquier artista.
-*   **Análisis de Sentimiento:** Utiliza `TextBlob` para analizar la "positividad" de los títulos de las canciones de toda la discografía de un artista.
-*   **Sistema de Caché Inteligente:** La primera vez que se analiza un artista, los resultados se guardan. Las búsquedas posteriores para el mismo artista son **instantáneas**.
-*   **Creación de Playlists con Un Clic:** Se integra con la autenticación de usuario de Spotify (`OAuth`) para crear playlists públicas en la cuenta del usuario con las canciones encontradas.
+*   **Identificación de Álbum Esencial:** Implementa una lógica para determinar el álbum más representativo de un artista.
+*   **Creación de Playlists con Un Clic:** Se integra de forma segura con la autenticación de usuario de Spotify (`OAuth`) para crear playlists públicas en la cuenta del usuario.
 *   **Diseño Moderno y Responsivo:** Interfaz de usuario limpia y atractiva desarrollada con Bootstrap y CSS personalizado.
 *   **Desplegada y Siempre Activa:** Alojada en PythonAnywhere y mantenida "despierta" por un monitor de UptimeRobot.
 
 ## Stack Tecnológico
 
 *   **Backend:** Python, Flask
-*   **APIs Externas:**
-    *   Spotify API (autenticación de cliente y de usuario con `OAuth`)
-    *   Genius API (para metadatos de canciones)
-*   **Análisis de Datos:** TextBlob (para Procesamiento de Lenguaje Natural y análisis de sentimiento)
+*   **API Externa:** Spotify API (utilizando `Client Credentials` para búsquedas públicas y `OAuth` para acciones de usuario)
 *   **Frontend:** HTML5, CSS3, Bootstrap 5
-*   **Base de Datos / Caché:** Sistema de archivos con JSON.
 *   **Servidor de Producción:** Gunicorn
 *   **Plataforma de Despliegue:** PythonAnywhere
 *   **Control de Versiones:** Git y GitHub
@@ -70,8 +63,6 @@ Para ejecutar este proyecto en tu propia máquina, sigue estos pasos:
     *   Añade tus credenciales con el siguiente formato:
         ```        SPOTIPY_CLIENT_ID='TU_ID_DE_CLIENTE_DE_SPOTIFY'
         SPOTIPY_CLIENT_SECRET='TU_SECRETO_DE_CLIENTE_DE_SPOTIFY'
-        GENIUS_ACCESS_TOKEN='TU_TOKEN_DE_ACCESO_DE_GENIUS'
-        SPOTIPY_REDIRECT_URI='http://127.0.0.1:8888/callback'
         ```
 5.  **Actualiza tu Dashboard de Spotify:**
     *   Asegúrate de añadir `http://127.0.0.1:8888/callback` a la lista de Redirect URIs en la configuración de tu aplicación de Spotify.
